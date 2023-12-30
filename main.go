@@ -1,17 +1,19 @@
 package main
 
 import (
-	"golang.org/x/term"
+	tea "github.com/charmbracelet/bubbletea"
+	"fmt"
 	"os"
 )
 
 func main() {
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		panic(err)
+	model := Model{
+		state: WelcomeState{},
 	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState)
+	program := tea.NewProgram(model)
 
-	chimptypeInstance := NewChimpType()
-	chimptypeInstance.Start()
+	if err := program.Start(); err != nil {
+		fmt.Fprintf(os.Stderr, "Chimptype: %s\n", err)
+		os.Exit(1)
+	}
 }

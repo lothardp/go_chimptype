@@ -28,6 +28,10 @@ type TestState struct {
 	finished    bool
 }
 
+type TestResult struct {
+	finalState TestState
+}
+
 func NewTestState(wordList []string) TestState {
 	return TestState{
 		wordList:    wordsToKeyLists(wordList),
