@@ -7,3 +7,6 @@
 [] Time management for tests
 [] Show results and stats
 [] More words (and random)
+[] Add tests
+[] Imitate monkeytype behaviour for some keys (ignore enter, tab starts a new test, etc)
+[] Fix the word wrapping, its ugly

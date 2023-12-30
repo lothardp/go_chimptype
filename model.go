@@ -1,13 +1,18 @@
 package main
 
 import (
-	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 // Holds the state of the program following the ELM architecture of bubbletea
 type Model struct {
-	state ModelState
+	state  ModelState
+	window Window
+}
+
+type Window struct {
+	height int
+	width  int
 }
 
 type ModelState interface{}
@@ -46,6 +51,11 @@ func (c Model) View() string {
 
 // Handles messages and updates the state
 func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if msg, ok := msg.(tea.WindowSizeMsg); ok {
+		c.resizeWindow(msg)
+		return c, nil
+	}
+
 	switch (c.state).(type) {
 	case WelcomeState:
 		switch msg := msg.(type) {
@@ -147,39 +157,16 @@ func (c *Model) passMsgToTestState(msg tea.KeyMsg) {
 	}
 }
 
-func (c *Model) viewWelcome() string {
-	return "Welcome!"
-}
-
-func (c *Model) viewTestRunning(testState TestState) string {
-	s := ""
-	for _, word := range testState.wordList {
-		for _, char := range word {
-			s += fmt.Sprintf("%c", char.char)
-		}
-		s += fmt.Sprintf(" ")
-	}
-	s += fmt.Sprintln()
-
-	for _, char := range testState.typedChars {
-		if char.keyType == Space {
-			s += fmt.Sprintf(" ")
-		} else {
-			s += fmt.Sprintf("%c", char.char)
-		}
-	}
-	s += fmt.Sprintln()
-	return s
-}
-
-func (c *Model) viewTestFinished(testResult TestResult) string {
-	return "Well done!"
-}
-
 func (c *Model) generateWordList(wordCount int) []string {
 	return []string{"no", "yes", "fish", "tree", "road",
 		"music", "stone", "bird", "book", "light", "glass",
 		"flower", "table", "phone", "house", "fish", "house",
 		"phone", "music", "stone", "tree", "river", "green",
 		"flower", "glass"}
+}
+
+// Window resize msg is sent once at the start of the program
+func (c *Model) resizeWindow(msg tea.WindowSizeMsg) {
+	c.window.height = msg.Height
+	c.window.width = msg.Width
 }
