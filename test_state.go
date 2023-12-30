@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"io"
 )
 
 type KeyType int
@@ -11,8 +10,6 @@ const (
 	Char KeyType = iota
 	Backspace
 	Space
-	Enter
-	Esc
 )
 
 type Key struct {
@@ -100,10 +97,6 @@ func (ts *TestState) charIndex() int {
 	}
 
 	return charIndex
-}
-
-func (ts *TestState) Draw(w io.Writer) {
-	// Drawing logic
 }
 
 func wordsToKeyLists(wordList []string) [][]Key {

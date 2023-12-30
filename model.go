@@ -5,25 +5,29 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Holds the state of the program following the ELM architecture of bubbletea
 type Model struct {
-	state        State
+	state ModelState
 }
 
-type State interface{}
+type ModelState interface{}
 
+// States of the whole program
 type WelcomeState struct{}
+
 type TestRunningState struct {
 	testState TestState
 }
+
 type TestFinishedState struct {
 	testResult TestResult
 }
-type ExitState struct{}
 
 func (c Model) Init() tea.Cmd {
 	return nil
 }
 
+// Returns the string to be displayed based on the current state
 func (c Model) View() string {
 	switch state := (c.state).(type) {
 	case WelcomeState:
@@ -40,6 +44,7 @@ func (c Model) View() string {
 	}
 }
 
+// Handles messages and updates the state
 func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch (c.state).(type) {
 	case WelcomeState:
@@ -47,7 +52,7 @@ func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.Type {
 			case tea.KeyEnter:
-				c.newTest()
+				c.startNewTest()
 				return c, nil
 
 			case tea.KeyCtrlC, tea.KeyEsc:
@@ -60,7 +65,7 @@ func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.Type {
 			case tea.KeyCtrlC, tea.KeyEsc:
-				c.stopTest()
+				c.interruptTest()
 				return c, nil
 
 			default:
@@ -86,6 +91,7 @@ func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return c, nil
 }
 
+// Translates tea.KeyMsg to Key for the internal test_state
 func translateKey(msg tea.KeyMsg) Key {
 	var key Key
 
@@ -112,15 +118,16 @@ func translateKey(msg tea.KeyMsg) Key {
 	return key
 }
 
-func (c *Model) newTest() {
+func (c *Model) startNewTest() {
 	wordList := c.generateWordList(25)
 	c.state = TestRunningState{
 		testState: NewTestState(wordList),
 	}
 }
 
-func (c *Model) stopTest() {
+func (c *Model) interruptTest() {
 	// TODO: do something else?
+	// maybe save the half test result?
 	c.state = WelcomeState{}
 }
 
