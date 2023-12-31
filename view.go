@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -15,16 +16,20 @@ const (
 	cursorBackgroundColor = lipgloss.Color("250")
 	cursorForegroundColor = lipgloss.Color("0")
 	untypedCharColor      = lipgloss.Color("250")
-	rightCharColor        = lipgloss.Color("250")
+	rightCharColor        = lipgloss.Color("244")
 	wrongCharColor        = lipgloss.Color("1")
+	missedCharColor       = lipgloss.Color("1")
 	extraCharColor        = lipgloss.Color("1")
 )
 
-func (c *Model) viewWelcome() string {
+func (c *Model) viewWelcome(state WelcomeState) string {
 	title := lipgloss.NewStyle().Render("Welcome to Chimptype!\n")
-	message := lipgloss.NewStyle().Render("Press enter key to start the test\nPress ESC or ctrl-c to quit")
 
-	view := lipgloss.JoinVertical(lipgloss.Center, title, message)
+	wordsMenu := viewNumberOfWordsMenu(state.numberOfWords)
+
+	footer := lipgloss.NewStyle().Render("Press ESC or ctrl-c to quit")
+
+	view := lipgloss.JoinVertical(lipgloss.Center, title, wordsMenu, footer)
 
 	return lipgloss.Place(c.window.width, c.window.height, lipgloss.Center, lipgloss.Center, view)
 }
@@ -43,6 +48,19 @@ func (c *Model) viewTestFinished(testResult TestResult) string {
 	return "Well done!"
 }
 
+func viewNumberOfWordsMenu(numberOfWords int) string {
+	s := "Select the number of words:\n"
+	for _, n := range NUMBER_OF_WORDS_OPTIONS {
+		selected := " "
+		if n == numberOfWords {
+			selected = "x"
+		}
+		s += fmt.Sprintf("[%s] %d words\n", selected, n)
+	}
+
+	return lipgloss.NewStyle().Render(s)
+}
+
 // Returns the string to be displayed and the raw string
 func getTestString(testState TestState) (view string, rawString string) {
 	words := translateWordList(testState.wordList)
@@ -57,16 +75,19 @@ func getTestString(testState TestState) (view string, rawString string) {
 			typedWord = typedWords[wordIndex]
 		}
 
-		isCurrentWord := false
+		wordStatus := "passed"
 		if wordIndex == len(typedWords)-1 {
-			isCurrentWord = true
+			wordStatus = "current"
+		} else if wordIndex > len(typedWords)-1 {
+			wordStatus = "next"
 		}
 
-		w, rw := getWordViewString(word, typedWord, isCurrentWord)
+		w, rw := getWordViewString(word, typedWord, wordStatus)
 		view += w
 		rawString += rw
 
 		if wordIndex < len(words)-1 {
+			isCurrentWord := wordStatus == "current"
 			if isCurrentWord && len(typedWord) >= len(word) {
 				view += renderCursor(" ")
 			} else {
@@ -82,7 +103,7 @@ func getTestString(testState TestState) (view string, rawString string) {
 }
 
 // Returns the string to be displayed for a single word and the raw string
-func getWordViewString(word string, typedWord string, isCurrentWord bool) (view string, rawWord string) {
+func getWordViewString(word string, typedWord string, wordStatus string) (view string, rawWord string) {
 	charIndex := 0
 
 loop:
@@ -104,8 +125,10 @@ loop:
 
 		// Still chars left to type
 		case char != "" && typedChar == "":
-			if isCurrentWord && charIndex == len(typedWord) {
+			if wordStatus =="current" && charIndex == len(typedWord) {
 				view += renderCursor(char)
+			} else if wordStatus == "passed" {
+				view += renderMissedChar(char)
 			} else {
 				view += renderUntypedChar(char)
 			}
@@ -134,6 +157,12 @@ loop:
 	}
 
 	return view, rawWord
+}
+
+func renderMissedChar(char string) string {
+	return lipgloss.NewStyle().
+		Foreground(missedCharColor).
+		Render(char)
 }
 
 func renderExtraChar(char string) string {

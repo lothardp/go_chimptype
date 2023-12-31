@@ -1,14 +1,18 @@
 package main
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
+	"math/rand"
 	"os"
+	"time"
 )
 
 func main() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
 	model := Model{
-		state: WelcomeState{},
+		state: WelcomeState{numberOfWords: NUMBER_OF_WORDS_OPTIONS[0]},
 	}
 
 	program := tea.NewProgram(model, tea.WithAltScreen())

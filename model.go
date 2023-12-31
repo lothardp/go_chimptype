@@ -1,8 +1,13 @@
 package main
 
 import (
+	"math/rand"
+	"lothardp/go_chimptype/words"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+var NUMBER_OF_WORDS_OPTIONS = [5]int{5, 10, 25, 50, 100}
 
 // Holds the state of the program following the ELM architecture of bubbletea
 type Model struct {
@@ -18,7 +23,9 @@ type Window struct {
 type ModelState interface{}
 
 // States of the whole program
-type WelcomeState struct{}
+type WelcomeState struct {
+	numberOfWords int
+}
 
 type TestRunningState struct {
 	testState TestState
@@ -36,7 +43,7 @@ func (c Model) Init() tea.Cmd {
 func (c Model) View() string {
 	switch state := (c.state).(type) {
 	case WelcomeState:
-		return c.viewWelcome()
+		return c.viewWelcome(state)
 
 	case TestRunningState:
 		return c.viewTestRunning(state.testState)
@@ -56,17 +63,20 @@ func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return c, nil
 	}
 
-	switch (c.state).(type) {
+	switch state := (c.state).(type) {
 	case WelcomeState:
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch msg.Type {
 			case tea.KeyEnter:
-				c.startNewTest()
+				c.startNewTest(state.numberOfWords)
 				return c, nil
 
 			case tea.KeyCtrlC, tea.KeyEsc:
 				return c, tea.Quit
+
+			case tea.KeyUp, tea.KeyDown, tea.KeyRunes:
+				c.handleWelcomeStateKey(state, msg)
 			}
 		}
 
@@ -89,7 +99,7 @@ func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.Type {
 			case tea.KeyEnter, tea.KeyEsc, tea.KeyCtrlC:
-				c.state = WelcomeState{}
+				c.state = WelcomeState{numberOfWords: NUMBER_OF_WORDS_OPTIONS[0]}
 				return c, nil
 			}
 		}
@@ -116,6 +126,7 @@ func translateKey(msg tea.KeyMsg) Key {
 
 	default:
 		// TODO: Maybe only accept chars/numbers/punctuation?
+		// i think i should check for case tea.KeyRunes not default
 		if len(msg.Runes) == 0 {
 			// TODO: handle this better
 			key.char = 'X'
@@ -128,8 +139,8 @@ func translateKey(msg tea.KeyMsg) Key {
 	return key
 }
 
-func (c *Model) startNewTest() {
-	wordList := c.generateWordList(25)
+func (c *Model) startNewTest(numWords int) {
+	wordList := c.generateWordList(numWords)
 	c.state = TestRunningState{
 		testState: NewTestState(wordList),
 	}
@@ -138,7 +149,7 @@ func (c *Model) startNewTest() {
 func (c *Model) interruptTest() {
 	// TODO: do something else?
 	// maybe save the half test result?
-	c.state = WelcomeState{}
+	c.state = WelcomeState{numberOfWords: NUMBER_OF_WORDS_OPTIONS[0]}
 }
 
 func (c *Model) passMsgToTestState(msg tea.KeyMsg) {
@@ -158,15 +169,46 @@ func (c *Model) passMsgToTestState(msg tea.KeyMsg) {
 }
 
 func (c *Model) generateWordList(wordCount int) []string {
-	return []string{"no", "yes", "fish", "tree", "road",
-		"music", "stone", "bird", "book", "light", "glass",
-		"flower", "table", "phone", "house", "fish", "house",
-		"phone", "music", "stone", "tree", "river", "green",
-		"flower", "glass"}
+	list := make([]string, wordCount)
+
+	for i := range list {
+		list[i] = words.WORDS[rand.Intn(len(words.WORDS))] 
+	}
+
+	return list
 }
 
 // Window resize msg is sent once at the start of the program
 func (c *Model) resizeWindow(msg tea.WindowSizeMsg) {
 	c.window.height = msg.Height
 	c.window.width = msg.Width
+}
+
+func (c *Model) handleWelcomeStateKey(state WelcomeState, msg tea.KeyMsg) {
+	upMove := msg.Type == tea.KeyUp || (msg.Type == tea.KeyRunes && len(msg.Runes) > 0 && msg.Runes[0] == 'k')
+	downMove := msg.Type == tea.KeyDown || (msg.Type == tea.KeyRunes && len(msg.Runes) > 0 && msg.Runes[0] == 'j')
+
+	currentIndex := findIndex(NUMBER_OF_WORDS_OPTIONS[:], state.numberOfWords)
+
+	if upMove {
+		if currentIndex > 0 {
+			currentIndex--
+		}
+	} else if downMove {
+		if currentIndex < len(NUMBER_OF_WORDS_OPTIONS)-1 {
+			currentIndex++
+		}
+	}
+
+	state.numberOfWords = NUMBER_OF_WORDS_OPTIONS[currentIndex]
+	c.state = state
+}
+
+func findIndex(NUMBER_OF_WORDS_OPTIONS []int, i int) int {
+	for index, value := range NUMBER_OF_WORDS_OPTIONS {
+		if value == i {
+			return index
+		}
+	}
+	panic("Number of words not found in options")
 }
