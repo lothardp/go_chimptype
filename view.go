@@ -125,7 +125,7 @@ loop:
 
 		// Still chars left to type
 		case char != "" && typedChar == "":
-			if wordStatus =="current" && charIndex == len(typedWord) {
+			if wordStatus == "current" && charIndex == len(typedWord) {
 				view += renderCursor(char)
 			} else if wordStatus == "passed" {
 				view += renderMissedChar(char)

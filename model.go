@@ -1,8 +1,8 @@
 package main
 
 import (
-	"math/rand"
 	"lothardp/go_chimptype/words"
+	"math/rand"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -172,7 +172,7 @@ func (c *Model) generateWordList(wordCount int) []string {
 	list := make([]string, wordCount)
 
 	for i := range list {
-		list[i] = words.WORDS[rand.Intn(len(words.WORDS))] 
+		list[i] = words.WORDS[rand.Intn(len(words.WORDS))]
 	}
 
 	return list
