@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"log"
 	"strings"
+	"time"
 )
 
 type KeyType int
@@ -24,10 +26,20 @@ type TestState struct {
 	typedChars  []Key
 	rawCharList []Key
 	finished    bool
+	startTime   time.Time
+	finishTime  time.Time
 }
 
 type TestResult struct {
 	finalState TestState
+	duration   time.Duration
+	netWPM     float64
+	rawWPM     float64
+	accuracy   float64
+	correct    int
+	errors     int
+	missed     int
+	extra      int
 }
 
 func NewTestState(wordList []string) TestState {
@@ -40,7 +52,59 @@ func NewTestState(wordList []string) TestState {
 	}
 }
 
+func newTestResult(testState TestState) TestResult {
+	duration := testState.finishTime.Sub(testState.startTime)
+	netWPM, rawWPM := calculateWPM(testState, duration)
+	accuracy := calculateAccuracy(testState)
+
+	return TestResult{
+		finalState: testState,
+		duration:   duration,
+		netWPM:     netWPM,
+		rawWPM:     rawWPM,
+		accuracy:   accuracy,
+	}
+}
+
+// TODO: There is different formulas for calculating calculate wpm, choose best one
+func calculateWPM(state TestState, duration time.Duration) (float64, float64) {
+	words := keyListsToString(state.wordList)
+	typedWords := strings.Split(keyListToString(state.typedChars), " ")
+
+	if len(words) != len(typedWords) {
+		log.Print("Error: word count mismatch")
+		return 0, 0
+	}
+
+	typedWordsNum := float64(len(state.typedChars)) / 5.0
+	wrongWordsNum := float64(wrongTypedWords(words, typedWords))
+
+	rawWPM := typedWordsNum / duration.Minutes()
+
+	netWPM := rawWPM - wrongWordsNum/duration.Minutes()
+
+	return netWPM, rawWPM
+}
+
+func wrongTypedWords(words []string, typedWords []string) int {
+	wrongWords := 0
+	for i := range words {
+		if words[i] != typedWords[i] {
+			wrongWords++
+		}
+	}
+	return wrongWords
+}
+
+func calculateAccuracy(state TestState) float64 {
+	return 0
+}
+
 func (ts *TestState) HandleKey(key Key) error {
+	if ts.startTime.IsZero() {
+		ts.startTime = time.Now()
+	}
+
 	ts.rawCharList = append(ts.rawCharList, key)
 
 	switch key.keyType {
@@ -71,7 +135,7 @@ func (ts *TestState) handleChar(key Key) {
 		lastTypedWord := typedWords[len(typedWords)-1]
 
 		if lastTypedWord == keyListToString(ts.wordList[ts.wordIndex]) {
-			ts.finished = true
+			ts.finishTest()
 		}
 	}
 }
@@ -79,7 +143,7 @@ func (ts *TestState) handleChar(key Key) {
 func (ts *TestState) handleSpace() {
 	ts.typedChars = append(ts.typedChars, Key{Space, ' '})
 	if ts.wordIndex == len(ts.wordList)-1 {
-		ts.finished = true
+		ts.finishTest()
 	} else {
 		ts.wordIndex++
 	}
@@ -129,6 +193,15 @@ func stringToKeyList(word string) []Key {
 	return keyList
 }
 
+func keyListsToString(keyLists [][]Key) []string {
+	strs := []string{}
+	for _, keyList := range keyLists {
+		strs = append(strs, keyListToString(keyList))
+	}
+
+	return strs
+}
+
 func keyListToString(keyList []Key) string {
 	str := ""
 	for _, key := range keyList {
@@ -136,4 +209,9 @@ func keyListToString(keyList []Key) string {
 	}
 
 	return str
+}
+
+func (ts *TestState) finishTest() {
+	ts.finished = true
+	ts.finishTime = time.Now()
 }

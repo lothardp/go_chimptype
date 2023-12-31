@@ -160,7 +160,7 @@ func (c *Model) passMsgToTestState(msg tea.KeyMsg) {
 
 		if state.testState.finished {
 			c.state = TestFinishedState{
-				testResult: TestResult{state.testState},
+				testResult: newTestResult(state.testState),
 			}
 		}
 	} else {

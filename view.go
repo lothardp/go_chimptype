@@ -48,7 +48,24 @@ func (c *Model) viewTestRunning(testState TestState) string {
 }
 
 func (c *Model) viewTestFinished(testResult TestResult) string {
-	return "Well done!"
+	s := "Test finished!\n\nYour Results:\n\n"
+	s += viewTestResults(testResult)
+
+	return lipgloss.Place(c.window.width, c.window.height, lipgloss.Center, lipgloss.Center, s)
+}
+
+func viewTestResults(testResult TestResult) string {
+	s := ""
+	s += fmt.Sprintf("Net WPM: %.1f\n", testResult.netWPM)
+	s += fmt.Sprintf("Raw WPM: %.1f\n", testResult.rawWPM)
+	s += fmt.Sprintf("Accuracy: %.1f%%\n", testResult.accuracy)
+	s += fmt.Sprintf("Time: %.1f seconds\n", testResult.duration.Seconds())
+	s += fmt.Sprintf("Errors: %d\n", testResult.errors)
+	s += fmt.Sprintf("Correct: %d\n", testResult.correct)
+	s += fmt.Sprintf("Missed: %d\n", testResult.missed)
+	s += fmt.Sprintf("Extra: %d\n", testResult.extra)
+
+	return lipgloss.NewStyle().Render(s)
 }
 
 func viewNumberOfWordsMenu(numberOfWords int) string {
