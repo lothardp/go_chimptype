@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"strings"
 )
 
 type KeyType int
@@ -31,7 +32,7 @@ type TestResult struct {
 
 func NewTestState(wordList []string) TestState {
 	return TestState{
-		wordList:    wordsToKeyLists(wordList),
+		wordList:    stringsToKeyLists(wordList),
 		wordIndex:   0,
 		typedChars:  []Key{},
 		rawCharList: []Key{},
@@ -60,12 +61,23 @@ func (ts *TestState) HandleKey(key Key) error {
 }
 
 func (ts *TestState) handleChar(key Key) {
-	// TODO: Add logic to finish test without space
 	ts.typedChars = append(ts.typedChars, key)
+
+	// TODO: Add logic to finish test without space
+	inLastWord := ts.wordIndex == len(ts.wordList)-1
+
+	if inLastWord {
+		typedWords := strings.Split(keyListToString(ts.typedChars), " ")
+		lastTypedWord := typedWords[len(typedWords)-1]
+
+		if lastTypedWord == keyListToString(ts.wordList[ts.wordIndex]) {
+			ts.finished = true
+		}
+	}
 }
 
 func (ts *TestState) handleSpace() {
-	ts.typedChars = append(ts.typedChars, Key{keyType: Space})
+	ts.typedChars = append(ts.typedChars, Key{Space, ' '})
 	if ts.wordIndex == len(ts.wordList)-1 {
 		ts.finished = true
 	} else {
@@ -99,20 +111,29 @@ func (ts *TestState) charIndex() int {
 	return charIndex
 }
 
-func wordsToKeyLists(wordList []string) [][]Key {
+func stringsToKeyLists(wordList []string) [][]Key {
 	keyLists := [][]Key{}
 	for _, word := range wordList {
-		keyLists = append(keyLists, wordToKeyList(word))
+		keyLists = append(keyLists, stringToKeyList(word))
 	}
 
 	return keyLists
 }
 
-func wordToKeyList(word string) []Key {
+func stringToKeyList(word string) []Key {
 	keyList := []Key{}
 	for _, char := range word {
 		keyList = append(keyList, Key{Char, char})
 	}
 
 	return keyList
+}
+
+func keyListToString(keyList []Key) string {
+	str := ""
+	for _, key := range keyList {
+		str += string(key.char)
+	}
+
+	return str
 }
