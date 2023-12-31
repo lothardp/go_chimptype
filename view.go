@@ -13,6 +13,9 @@ const (
 )
 
 const (
+	defaultBackgroundColor = lipgloss.Color("0")
+	defaultForegroundColor = lipgloss.Color("250")
+
 	cursorBackgroundColor = lipgloss.Color("250")
 	cursorForegroundColor = lipgloss.Color("0")
 	untypedCharColor      = lipgloss.Color("250")
@@ -159,6 +162,13 @@ loop:
 	return view, rawWord
 }
 
+func renderDefaultStyle(s string) string {
+	return lipgloss.NewStyle().
+		Background(defaultBackgroundColor).
+		Foreground(defaultForegroundColor).
+		Render(s)
+}
+
 func renderMissedChar(char string) string {
 	return lipgloss.NewStyle().
 		Foreground(missedCharColor).
@@ -264,8 +274,7 @@ func wrap(rawString string, viewString string, testWidth int) string {
 				i++
 			}
 		}
-		finalViewString = strings.TrimRight(finalViewString, " ")
-		finalViewString += "\n"
+		finalViewString += renderDefaultStyle("\n")
 	}
 
 	return finalViewString
