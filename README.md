@@ -9,6 +9,7 @@
 - [ ] Add tests
 - [ ] Fix the word wrapping, its ugly
 - [ ] Imitate monkeytype behaviour for some keys (ignore enter, tab starts a new test, etc )
+- [ ] Add logging
 - [ ] Improve README
 - [ ] Better views
   - [ ] Better Coloring
