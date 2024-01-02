@@ -11,8 +11,10 @@
 - [ ] Imitate monkeytype behaviour for some keys (ignore enter, tab starts a new test, etc )
 - [ ] Add logging
 - [ ] Improve README
-- [ ] Better views
+- [ ] Better views (Better style and design overall)
   - [ ] Better Coloring
+  - [ ] Better menus (borders?)
+  - [ ] Better score view
 - [ ] Save scores to local db
 
 ### Minor fixes
