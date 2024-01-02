@@ -37,14 +37,24 @@ func (c *Model) viewWelcome(state WelcomeState) string {
 	return lipgloss.Place(c.window.width, c.window.height, lipgloss.Center, lipgloss.Center, view)
 }
 
-func (c *Model) viewTestRunning(testState TestState) string {
+func (c *Model) viewTestRunning(state TestRunningState) string {
+	testState := state.testState
+
+	durationString := durationView(state.duration.Seconds())
+
 	s, rawS := getTestString(testState)
 
 	s = wrap(rawS, s, getTestWidth(c.window.width))
 
-	test := lipgloss.NewStyle().Render(s)
+	test := lipgloss.JoinVertical(lipgloss.Center, lipgloss.NewStyle().Render(durationString), s)
 
 	return lipgloss.Place(c.window.width, c.window.height, lipgloss.Center, lipgloss.Center, test)
+}
+
+func durationView(seconds float64) string {
+	s := fmt.Sprintf("%.1fs\n", seconds)
+
+	return lipgloss.NewStyle().Render(s)
 }
 
 func (c *Model) viewTestFinished(testResult TestResult) string {

@@ -5,7 +5,7 @@
 - [X] Should be able to choose number of words 
 - [X] More words (and random)
 - [X] Show results and stats
-- [ ] Add timer management for tests
+- [X] Add live timer for tests
 - [ ] Add tests
 - [ ] Fix the word wrapping, its ugly
 - [ ] Imitate monkeytype behaviour for some keys (ignore enter, tab starts a new test, etc )
@@ -14,3 +14,6 @@
 - [ ] Better views
   - [ ] Better Coloring
 - [ ] Save scores to local db
+
+### Minor fixes
+- [ ] Change c receivers for m

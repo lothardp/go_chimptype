@@ -3,6 +3,7 @@ package main
 import (
 	"lothardp/go_chimptype/words"
 	"math/rand"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -29,11 +30,15 @@ type WelcomeState struct {
 
 type TestRunningState struct {
 	testState TestState
+	duration  time.Duration
 }
 
 type TestFinishedState struct {
 	testResult TestResult
 }
+
+// Custom Msgs
+type TickMsg time.Time
 
 func (c Model) Init() tea.Cmd {
 	return nil
@@ -46,7 +51,7 @@ func (c Model) View() string {
 		return c.viewWelcome(state)
 
 	case TestRunningState:
-		return c.viewTestRunning(state.testState)
+		return c.viewTestRunning(state)
 
 	case TestFinishedState:
 		return c.viewTestFinished(state.testResult)
@@ -70,7 +75,7 @@ func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.Type {
 			case tea.KeyEnter:
 				c.startNewTest(state.numberOfWords)
-				return c, nil
+				return c, doTick()
 
 			case tea.KeyCtrlC, tea.KeyEsc:
 				return c, tea.Quit
@@ -82,6 +87,10 @@ func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case TestRunningState:
 		switch msg := msg.(type) {
+		case TickMsg:
+			c.handleTick(state, msg)
+			return c, doTick()
+
 		case tea.KeyMsg:
 			switch msg.Type {
 			case tea.KeyCtrlC, tea.KeyEsc:
@@ -109,6 +118,21 @@ func (c Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return c, nil
+}
+
+func doTick() tea.Cmd {
+	return tea.Tick(time.Millisecond, func(t time.Time) tea.Msg {
+		return TickMsg(t)
+	})
+}
+
+func (c *Model) handleTick(state TestRunningState, msg TickMsg) {
+	if state.testState.startTime.IsZero() {
+		return
+	}
+
+	state.duration = time.Time(msg).Sub(state.testState.startTime)
+	c.state = state
 }
 
 // Translates tea.KeyMsg to Key for the internal test_state
