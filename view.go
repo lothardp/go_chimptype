@@ -13,8 +13,8 @@ const (
 )
 
 const (
-	defaultBackgroundColor = lipgloss.Color("0")
-	defaultForegroundColor = lipgloss.Color("250")
+	defaultBackgroundColor = lipgloss.Color("94")
+	defaultForegroundColor = lipgloss.Color("126")
 
 	cursorBackgroundColor = lipgloss.Color("250")
 	cursorForegroundColor = lipgloss.Color("0")
@@ -42,13 +42,29 @@ func (c *Model) viewTestRunning(state TestRunningState) string {
 
 	durationString := durationView(state.duration.Seconds())
 
-	s, rawS := getTestString(testState)
+	s, _ := getTestString(testState)
 
-	s = wrap(rawS, s, getTestWidth(c.window.width))
+	testStyle := lipgloss.NewStyle().Width(getTestWidth(c.window.width)).Align(lipgloss.Center)
+
+	s = testStyle.Render(s)
+
+	s = strings.ReplaceAll(s, "\n", "\x1b[40m\n")
+	s = strings.ReplaceAll(s, "  ", " \x1b[40m ")
+
+	// str := lipgloss.NewStyle().Render("h")
+	// // Print the string as i
+	// for _, char := range str {
+	// 	fmt.Printf("(%x %c)", char, char)
+	// }
+	// fmt.Println()
+
+	// s = wrap(rawS, s, getTestWidth(c.window.width))
 
 	test := lipgloss.JoinVertical(lipgloss.Center, lipgloss.NewStyle().Render(durationString), s)
 
-	return lipgloss.Place(c.window.width, c.window.height, lipgloss.Center, lipgloss.Center, test)
+	test = lipgloss.Place(c.window.width, c.window.height, lipgloss.Center, lipgloss.Center, test)
+
+	return test
 }
 
 func durationView(seconds float64) string {
@@ -230,7 +246,7 @@ func renderCursor(char string) string {
 	return lipgloss.NewStyle().
 		Background(cursorBackgroundColor).
 		Foreground(cursorForegroundColor).
-		Render(char)
+		Render(char) + "\x1b[40m"
 }
 
 func translateWordList(wordList [][]Key) []string {
